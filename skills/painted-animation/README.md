@@ -10,6 +10,10 @@ Part of [animation-styles-skill](../../README.md).
 
 </div>
 
+![The same scene in all seven styles](template/docs/styles.jpg)
+
+> **New in this version: seven styles.** The original skill ([opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills)) paints only in watercolour. This version adds pixel, paper cutout, crayon, chalk, neon and risograph, and Claude asks which one to use before the storyboard. See [Styles](#styles).
+
 ![小镇姑娘](docs/xiaozhen-sheet.jpg)
 
 ## Overview
@@ -66,7 +70,7 @@ The storyboard and scene code are available in [examples/xiaozhen](examples/xiao
 ## Requirements
 
 - Claude Code with Claude Opus 5.5
-- Node.js, Google Chrome, ffmpeg
+- Node.js, Google Chrome (or Microsoft Edge), ffmpeg
 - Python 3 with numpy (for tempo detection only)
 
 ## Installation

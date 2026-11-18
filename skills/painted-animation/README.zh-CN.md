@@ -10,6 +10,10 @@
 
 </div>
 
+![同一场景的七种风格](template/docs/styles.jpg)
+
+> **本版本新增：七种风格。** 原技能（[opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills)）只有水彩一种画风。本版本新增像素、剪纸、蜡笔、粉笔、霓虹、孔版印刷，写分镜前 Claude 会请你选一种。详见[风格](#风格)。
+
 ![小镇姑娘](docs/xiaozhen-sheet.jpg)
 
 ## 概述
@@ -66,7 +70,7 @@
 ## 环境要求
 
 - Claude Code 及 Claude Opus 5.5
-- Node.js、Google Chrome、ffmpeg
+- Node.js、Google Chrome（或 Microsoft Edge）、ffmpeg
 - Python 3 及 numpy（仅节拍检测需要）
 
 ## 安装

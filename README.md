@@ -5,21 +5,44 @@
 <a href="README.md"><img src="https://img.shields.io/badge/English-0E0F0E?style=for-the-badge" alt="English"></a>
 <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/简体中文-DDF53D?style=for-the-badge" alt="简体中文"></a>
 
-A Claude Code skill for producing hand-painted animated videos with Claude Opus 5.5.
+**Seven visual styles for Claude's hand-painted animation skill.**
+Write the scenes once, then pick watercolour, pixel, paper cutout, crayon, chalk, neon or risograph.
 
 </div>
 
+![The same scene in all seven styles](skills/painted-animation/template/docs/styles.jpg)
+
+## What This Fork Adds
+
+This repository builds on [opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills) by tuzhechen2005 (via [Joker-chichi/claude-mv-skill](https://github.com/Joker-chichi/claude-mv-skill)). The original skill draws everything in **watercolour only**. This fork adds:
+
+- **Six new styles** alongside the original watercolour (table below).
+- **A style choice in the workflow.** Before the storyboard, Claude asks which style to use in a single question. If you already named a style, it skips the question.
+- **A pluggable style layer.** Scene code is unchanged; the style is one line in `src/config.js`, or `--style=` on the renderer to preview another style without editing anything.
+- **Much faster renders for the new styles.** They draw on a plain 2D canvas at roughly 2–250 ms per frame, compared with 0.3–9 s per frame for watercolour, and they need no GPU.
+- **Microsoft Edge support.** On Windows, Edge is found automatically when Chrome is not installed.
+
+| style | look | speed |
+|---|---|---|
+| `watercolor` | watercolour washes and boiling ink on paper (original, default) | slow, GPU |
+| `pixel` 🆕 | retro game art: low-res grid, limited palette, ordered dither | very fast |
+| `cutout` 🆕 | paper cutout / shadow puppets: card, cut edges, cast shadows | fast |
+| `crayon` 🆕 | a child's crayon drawing: waxy streaks, paper tooth | fast |
+| `chalk` 🆕 | chalk on a green blackboard | fast |
+| `neon` 🆕 | glowing neon tubes in a dark world, scanlines | medium |
+| `riso` 🆕 | risograph: four spot inks as halftones, off-register | fast |
+
+If you only want watercolour, the original repository does the same job.
+
 ## Overview
 
-The skill in this repository teaches Claude Opus 5.5 to produce a complete hand-painted video, covering storyboarding, animation, review, lyric synchronization and final encoding. All imagery is generated procedurally in code; no image or video generation model is involved. Every frame is a pure function of time, rendered in headless Chrome and encoded with ffmpeg.
-
-## Skill
+The skill teaches Claude Opus 5.5 to produce a complete animated video, covering storyboarding, animation, review, lyric synchronisation and final encoding. All imagery is generated procedurally in code; no image or video generation model is involved. Every frame is a pure function of time, rendered in headless Chrome or Edge and encoded with ffmpeg.
 
 ### painted-animation
 
 ![painted-animation](skills/painted-animation/docs/xiaozhen-sheet.jpg)
 
-Draws every shot with p5.js in one of seven styles: watercolour (p5.brush, the default), pixel, paper cutout, crayon, chalk, neon or risograph. Scenes stay the same; the style is one line of config. Characters act through a library of expressions and motion principles. Music videos are cut to the measured beat, and lyric videos carry word-by-word karaoke subtitles. Example: a 31-second lyric video for 陶喆《小镇姑娘》. [Documentation](skills/painted-animation/README.md).
+Characters act through a library of expressions and motion principles. Music videos are cut to the measured beat, and lyric videos carry word-by-word karaoke subtitles. Example: a 31-second lyric video for 陶喆《小镇姑娘》 (shown in watercolour). [Documentation](skills/painted-animation/README.md).
 
 ## Requirements
 
@@ -73,7 +96,7 @@ A style is one file in `skills/painted-animation/template/src/styles/` that deci
 
 ## Acknowledgements
 
-This repository is a fork of [opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills) by tuzhechen2005 (via [Joker-chichi/claude-mv-skill](https://github.com/Joker-chichi/claude-mv-skill)), extended with the pluggable style layer and six new styles.
+The base skill, the watercolour engine and the 小镇姑娘 example come from [opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills) by tuzhechen2005. The style layer and the six new styles were added in this repository.
 
 The painted-animation engine and guide are adapted from [ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase) by John Heibel (MIT License), and the method follows his [PDoomVideo](https://github.com/JohnHeibel/PDoomVideo). The project uses p5.js, p5.brush, Puppeteer and ffmpeg. The skill and examples were produced with Claude Opus 5.5 in Claude Code.
 
