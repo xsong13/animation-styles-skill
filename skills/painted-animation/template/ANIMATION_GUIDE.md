@@ -26,7 +26,8 @@ Underneath all three, the viewer has to be able to follow it. Timing (rule 4) is
 
 ### 1. The medium is solid: brush strokes, flat 2D, boil
 
-- **Paint everything with p5.brush through `paint()` and `inkLine()`.** Characters get flat `wash` colour plus an ink outline. Backgrounds get soft watercolour `fill` shapes, usually with no outline or a thin one. Never use plain p5 shapes (`rect`, `ellipse`, `fill()`): they look like 2000s Flash.
+- **Paint everything through `paint()`, `inkLine()` and `glow()`.** Characters get flat `wash` colour plus an ink outline. Backgrounds get soft `fill` shapes, usually with no outline or a thin one. Never use plain p5 shapes (`rect`, `ellipse`, `fill()`) or raw canvas calls in a scene: they look like 2000s Flash, and they skip the style (below), so they'd look wrong in every style but one.
+- **The style draws the marks; the scene says what's there.** `PROJECT.style` in `src/config.js` picks how every `paint()` / `inkLine()` / `glow()` is rendered (see `docs/styles.jpg` and "Styles" under Engine). Write scenes once, in the kit's terms (`wash`, `fill`, `ink`, `sw`, `PAL`), and they come out in watercolour, pixel art, paper cutout, crayon, chalk, neon or risograph. Do design for the chosen style, though: its notes below say what reads well in it.
 - **The linework boils.** `jit()` and `random()` are reseeded 12 times a second (`BOIL`), so every drawing wobbles slightly, like hand-drawn animation. That's the look; don't fight it. For anything that must stay put from frame to frame (star positions, tuft heights), use `hash(i)`. Give each separate element its own seed with `boilSeed(key)` (see Engine), or one moving thing makes everything drawn after it jitter.
 - **Everything is flat 2D. Never project 3D.** Don't rotate a box in perspective, don't use `rotateY` or WEBGL 3D and don't fake depth with math. Clawd turns through **drawn key views** (front → 3/4 → side → back 3/4 → back), exactly like a cartoon model sheet: see `turn()` and `spinView()`. Depth comes from overlap, scale and colour (farther = smaller, bluer, paler), never from a projection.
 - **Light is the one exception.** p5.brush mixes colour like pigment, so a yellow glow painted over blue turns green, and a thin wash over it turns grey. Use `glow()` for anything that shines: it adds real light, under the paper grain.
@@ -215,7 +216,8 @@ node render.mjs --encode --out=out/video.mp4                    # … then encod
 
 | file | what's in it |
 |---|---|
-| `src/config.js` | `PROJECT = { duration, bpm, offset, audio? }` |
+| `src/config.js` | `PROJECT = { duration, bpm, offset, style, audio? }` |
+| `src/styles/` | the styles: `watercolor.js` (default, in `core.js`), and `pixel`, `cutout`, `crayon`, `chalk`, `neon`, `riso` on the shared 2D kit `kit2d.js` |
 | `src/core.js` | canvas, palette, timing and motion helpers, `paint()`, camera, full-frame effects, `glow()`, lettering, paper, render hooks |
 | `src/clawd.js` | Clawd: views, emotions, eyes, mouths, hats, emotes, moves |
 | `src/timeline.js` | `shots()`, `LOOPS`, `brushWipe()` |
@@ -235,6 +237,28 @@ node render.mjs --encode --out=out/video.mp4                    # … then encod
 - **Each shot paints the whole frame,** background included. The paper texture is under everything and the grain is multiplied over the top, so leaving paper showing is a valid look.
 - **Canvas:** 1920×1080, origin top-left, y down.
 - `LOOPS.name = t => {...}; LOOPS.name.len = 4;` makes a standalone loop (tests, GIFs, sheets), rendered with `--loop=name`.
+
+### Styles
+
+`PROJECT.style` picks the look; `node render.mjs --style=<name> ...` (or `studio.html?style=<name>`) renders any style without editing the config, so you can show the user the same frame in several styles. `docs/styles.jpg` shows the demo in all seven.
+
+| style | look | what reads well | speed |
+|---|---|---|---|
+| `watercolor` | p5.brush watercolour fills, boiling ink, toothy paper (WebGL) | soft light, atmosphere, everything in this guide | slowest, ~0.5–2.5 s/frame |
+| `pixel` | flat shapes snapped to a 320×180 grid (`PROJECT.pixel`, px per art pixel) and a limited palette, ordered dither | chunky shapes, bold silhouettes, `onTwos()`, game-like moves; details under ~12 px vanish | very fast |
+| `cutout` | coloured card with scissor-cut edges, cast shadows, paper fibre; ink lines become paper strips | puppet motion (rotate parts about joints), layered depth, `o.lift` (0..2) for higher pieces | fast |
+| `crayon` | waxy streaks over paper tooth, doubled crayon outlines, shimmering on the boil | bright saturated colours, lumpy simple shapes, childlike stories | fast |
+| `chalk` | pastel chalk hatching on a green blackboard; dark fills erase the board | a few bold shapes, teacher's-sketch staging, "erase" transitions in `PAL.ink` | fast |
+| `neon` | dark world, every outline a glowing tube, bright fills shine, scanlines | night, cities, electronic music, clean outlines, `glow()` | medium |
+| `riso` | four spot inks (pink, blue, yellow, federal blue) as halftones, misregistered on cream paper | flat bold shapes, a small palette; `PROJECT.risoKick: 1` makes the registration jump on the beat | fast |
+
+What changes per style, so you can plan for it:
+- **Colour mapping.** Each style reinterprets `PAL` colours: chalk turns dark fills into board and lights the rest; neon darkens fills and lights their edges; riso splits colours into inks; pixel snaps to its palette. Keep `PAL.ink` for darks and real colours for everything else, and the mapping does the right thing.
+- **Translucent fills.** In watercolour a `fill` glaze is pigment; in the 2D styles it's a translucent layer (tissue paper, overprint, thin chalk). An opaque `wash` hides what's behind it in every style.
+- **Light.** `glow()` is additive light in watercolour and neon, a lantern halo in cutout, stepped bands in pixel, a scribble in crayon, a smudge in chalk and a yellow/pink halftone burst in riso.
+- **Dark scenes.** neon and chalk want dark scenes; crayon, cutout and riso look best with light grounds and a cream/paper sky, so leave some paper showing.
+- **Speed.** The six 2D styles render in tens to a few hundred ms per frame, so long videos are practical to render even without a GPU.
+- **Adding a style:** a file `src/styles/<name>.js` that sets `STYLE.name`, and (for a 2D style, after `kit2d.js`) replaces `paintAt(pts, o)`, `inkLine(pts, sw, col, br, curv)` and `glow(...)`, with optional `STYLE.paper()` and `STYLE.post(ctx, t)`; add its name to `STYLES` in `studio.html`. Use only `jit()`/`random()`/`hash()` for randomness.
 
 ### Painting
 

@@ -6,7 +6,7 @@
 <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/简体中文-D97757?style=for-the-badge" alt="简体中文"></a>
 
 A Claude Code skill for producing hand-painted animation and lyric videos with Claude Opus 5.5.
-Part of [opus-video-skills](../../README.md).
+Part of [animation-styles-skill](../../README.md).
 
 </div>
 
@@ -21,9 +21,26 @@ The method is derived from two projects by John Heibel: [PDoomVideo](https://git
 ## How It Works
 
 1. **Intake and storyboard.** For a music video, Claude first requests the audio and LRC lyrics, then asks one optional natural-language question about the desired story and overall feeling, recurring imagery and anything to avoid. It never splits this into five separate questions or fields. The user may answer in one sentence or leave it blank. Claude then writes a shot list covering setting, palette, character arc and transitions. For each shot it lists the "reads", the timed sequence of what the viewer must understand.
-2. **Drawing.** Each shot is a JavaScript function that paints the complete frame with p5.js and the [p5.brush](https://github.com/acamposuribe/p5.brush) watercolour library. Every frame is a pure function of time.
-3. **Review.** Small contact sheets, frame strips and close-up crops may be rendered in the cloud. Claude inspects the images and revises the code until each shot meets the guidelines.
-4. **Output.** Claude never starts a complete render without asking whether to render locally or in the cloud. Choosing local prohibits cloud full rendering and produces exact local commands instead. Frames are rendered in parallel and encoded to MP4 with ffmpeg, with audio muxed in if provided.
+2. **Style.** Claude asks the user to pick one of seven styles in a single question (or uses the one they already named): watercolour, pixel, cutout, crayon, chalk, neon or riso.
+3. **Drawing.** Each shot is a JavaScript function that paints the complete frame with p5.js through `paint()` / `inkLine()` / `glow()`; the chosen style renders those marks (watercolour uses the [p5.brush](https://github.com/acamposuribe/p5.brush) library, the other six draw on a plain 2D canvas). Every frame is a pure function of time.
+4. **Review.** Small contact sheets, frame strips and close-up crops may be rendered in the cloud. Claude inspects the images and revises the code until each shot meets the guidelines.
+5. **Output.** Claude never starts a complete render without asking whether to render locally or in the cloud. Choosing local prohibits cloud full rendering and produces exact local commands instead. Frames are rendered in parallel and encoded to MP4 with ffmpeg, with audio muxed in if provided.
+
+## Styles
+
+![The demo scene in all seven styles](template/docs/styles.jpg)
+
+| style | look | speed |
+|---|---|---|
+| `watercolor` | watercolour washes and boiling ink on paper (default) | ~0.5–2.5 s/frame, GPU |
+| `pixel` | retro game art: low-res grid, limited palette, ordered dither | very fast |
+| `cutout` | paper cutout / shadow puppets: card, cut edges, cast shadows | fast |
+| `crayon` | a child's crayon drawing: waxy streaks, paper tooth | fast |
+| `chalk` | chalk on a green blackboard | fast |
+| `neon` | glowing neon tubes in a dark world, scanlines | medium |
+| `riso` | risograph: four spot inks as halftones, off-register | fast |
+
+Scenes are written once; the style is one line in `src/config.js` (`style: 'cutout'`), or `node render.mjs --style=cutout …` to preview another style without changing it. Each style is a file in `template/src/styles/`; see "Styles" in `ANIMATION_GUIDE.md` for what reads well in each and how to add one.
 
 ## Characteristics
 
@@ -57,8 +74,8 @@ The storyboard and scene code are available in [examples/xiaozhen](examples/xiao
 See the [collection README](../../README.md#installation). As a plugin:
 
 ```
-/plugin marketplace add tuzhechen2005/opus-video-skills
-/plugin install painted-animation@opus-video-skills
+/plugin marketplace add xsong13/animation-styles-skill
+/plugin install painted-animation@animation-styles-skill
 ```
 
 ## Usage

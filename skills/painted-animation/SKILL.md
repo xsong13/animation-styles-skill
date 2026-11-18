@@ -1,25 +1,39 @@
 ---
 name: painted-animation
-description: Make hand-painted watercolour-and-ink cartoon videos (MP4) with code — p5.js + p5.brush rendered frame by frame in headless Chrome, encoded with ffmpeg — starring Clawd or any character. Use when the user asks to make an animation, animated short, cartoon, music video, lyric video, animated GIF/loop or "a video of Clawd…", or mentions the PDoomVideo / ClaudeAnimationBase approach. Covers storyboarding, the engine API, music and LRC lyric sync, cloud-friendly preview review, and choosing local or cloud rendering for the final video.
+description: Make hand-drawn-looking cartoon videos (MP4) with code in a style the user picks — watercolour and ink (default), pixel art, paper cutout, crayon, chalkboard, neon or risograph — rendered frame by frame in headless Chrome and encoded with ffmpeg, starring Clawd or any character. Use when the user asks to make an animation, animated short, cartoon, music video, lyric video, animated GIF/loop or "a video of Clawd…", or mentions the PDoomVideo / ClaudeAnimationBase approach. Covers storyboarding, the engine API, music and LRC lyric sync, cloud-friendly preview review, and choosing local or cloud rendering for the final video.
 ---
 
 # Painted animation
 
 A method for making short cartoons entirely in code, distilled from [JohnHeibel/PDoomVideo](https://github.com/JohnHeibel/PDoomVideo) (a 156 s music video painted by Claude Opus) and its generalised kit [ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase) (MIT), which is bundled here as `template/`.
 
-**How it works:** every frame is a pure function of time `t`. `studio.html` loads p5.js + p5.brush and your scene files; each shot paints the whole 1920×1080 frame with watercolour fills and boiling ink lines. `render.mjs` drives headless Chrome to render contact sheets for review, or every frame in parallel, and ffmpeg encodes the MP4 (with audio if given).
+**How it works:** every frame is a pure function of time `t`. `studio.html` loads p5.js, the chosen style and your scene files; each shot paints the whole 1920×1080 frame through `paint()` / `inkLine()` / `glow()`, and the style decides what those marks look like (watercolour fills and boiling ink by default). `render.mjs` drives headless Chrome to render contact sheets for review, or every frame in parallel, and ffmpeg encodes the MP4 (with audio if given).
 
 ## Workflow
 
 ### 0. Scaffold
 
 ```bash
-bash ~/.claude/skills/painted-animation/scripts/new_project.sh <project-dir>        # add --keep-demo to keep the example scene hooked up
+bash ~/.claude/skills/painted-animation/scripts/new_project.sh <project-dir> --style=<style>   # add --keep-demo to keep the example scene hooked up
 ```
 
-This copies the template, unhooks the demo scene, runs `npm install` and checks node / ffmpeg / Chrome. Then **read `<project-dir>/ANIMATION_GUIDE.md` in full** before designing anything: it holds the rules, the animation principles and the complete engine / Clawd API. Look at `docs/emotions.jpg` and `docs/views.jpg` (the model sheets) with the Read tool.
+This copies the template, sets `PROJECT.style`, unhooks the demo scene, runs `npm install` and checks node / ffmpeg / Chrome (or Edge). Then **read `<project-dir>/ANIMATION_GUIDE.md` in full** before designing anything: it holds the rules, the animation principles and the complete engine / Clawd API. Look at `docs/emotions.jpg` and `docs/views.jpg` (the model sheets) with the Read tool.
 
 For a music video or anything longer than ~20 s, also read [references/music-video.md](references/music-video.md).
+
+**Choose the style first, for every video.** The style shapes the storyboard (palette, light, what reads), so settle it before storyboarding. If the user already named a style (or something that clearly maps to one: "8-bit" → pixel, "paper puppets" → cutout, "like a kid drew it" → crayon, "cyberpunk" → neon, "screen print" → riso), use it and say which one you picked. Otherwise ask **one question in one message** listing the seven options with a few words each, plus your recommendation for their idea, and point them to `docs/styles.jpg` in the skill's `template/` folder (the same scene in every style). Don't split it into several questions. A blank or "you choose" answer means use your recommendation.
+
+| style | in a few words | suits |
+|---|---|---|
+| `watercolor` 水彩 | watercolour washes, boiling ink lines (default) | gentle stories, ballads, anything |
+| `pixel` 像素 | retro 16-bit game, limited palette, dither | games, chiptune, comedy |
+| `cutout` 剪纸 | coloured card, cut edges, cast shadows | folk tales, puppet theatre, Chinese songs |
+| `crayon` 蜡笔 | a child's waxy crayon drawing | childhood, playful, nostalgic |
+| `chalk` 粉笔 | chalk on a green blackboard | school, explainers, memories |
+| `neon` 霓虹 | glowing tubes in a dark city | night, electronic, cyberpunk |
+| `riso` 孔版 | risograph halftone inks, off-register | indie, zine, poster-like |
+
+Example question: "Which look should it have — watercolor (soft washes, the default), pixel (retro game), cutout (paper puppets with shadows), crayon (a child's drawing), chalk (blackboard), neon (glowing city at night) or riso (halftone screen print)? For this story I'd suggest cutout. `docs/styles.jpg` shows all seven." If they're torn between two, render the first key frame in both (`node render.mjs --style=a --sheet=… ` and `--style=b`) and show them. Style can be changed later by editing `PROJECT.style`; scenes don't need rewriting, though the palette and staging were planned for the first choice.
 
 For every music video, complete this intake before storyboarding or scene implementation:
 
@@ -73,7 +87,7 @@ Report the output path, length and ms/frame. Offer `open out/video.mp4`.
 
 These are the guide's rules condensed; the guide is authoritative.
 
-1. **Handmade medium.** Only `paint()` / `inkLine()` (p5.brush) — never plain p5 `rect`/`ellipse`/`fill`. Flat 2D only: turns go through drawn key views (`turn()`, `spinView()`), never 3D projection. Light via `glow()` (additive), because pigment-mixing makes yellow-over-blue go green.
+1. **Handmade medium, in the chosen style.** Only `paint()` / `inkLine()` / `glow()` — never plain p5 `rect`/`ellipse`/`fill` or raw canvas calls, which bypass the style. Flat 2D only: turns go through drawn key views (`turn()`, `spinView()`), never 3D projection. Light via `glow()`, never a pale paint over a dark one. Plan for the style: its row in the guide's "Styles" table says what reads well in it.
 2. **No text.** No captions, labels, signs or word bubbles; show it instead. Reactions are painted emotes (`!`, sweat, hearts…). The one exception is karaoke in a lyric video, and at most a few big SFX.
 3. **Something happens in every shot** — an event, cause → reaction, set-ups that pay off.
 4. **Time for the viewer.** List each shot's reads; one read at a time; fast actions, held meanings; lead the eye; the reads set the shot length. This is where generated animation fails most.
@@ -89,7 +103,8 @@ These are the guide's rules condensed; the guide is authoritative.
 - **Layering in doorways, windows and screens:** draw what's inside, then paint the surrounding wall/frame back over it, so nothing wider than the opening shows outside it (the train's `inDoor` + door jambs, the TV bezel pieces).
 - A `NaN` in a point list throws `Failed to construct 'OffscreenCanvas'` — guard degenerate geometry.
 - Under camera zoom ≳ 2, huge shapes lose outlines; outline weight scales with zoom, so scale `sw` down in close-ups.
-- Cost = number of fills and strokes. Aim for ≤ ~1.5–2.5 s/frame (the log prints ms/frame). Prefer fewer, bigger shapes. On machines without a real GPU, watercolour fills are slow — consider fewer `fill` shapes, or `--soft-gl` as a last resort.
+- Cost = number of fills and strokes. Aim for ≤ ~1.5–2.5 s/frame (the log prints ms/frame). Prefer fewer, bigger shapes. On machines without a real GPU, watercolour fills are slow — consider fewer `fill` shapes, or `--soft-gl` as a last resort. The six 2D styles don't need a GPU and run at tens to a few hundred ms/frame.
+- Windows: the renderer also finds Microsoft Edge, which works as well as Chrome.
 - macOS: the renderer uses `--use-angle=metal` and finds `/Applications/Google Chrome.app` automatically; otherwise pass `--chrome=<path>`.
 
 ## Adapting

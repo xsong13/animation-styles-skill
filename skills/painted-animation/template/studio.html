@@ -14,7 +14,14 @@
   #tt { font-variant-numeric: tabular-nums; min-width: 190px; }
 </style>
 <script src="node_modules/p5/lib/p5.min.js"></script>
-<script src="node_modules/p5.brush/dist/p5.brush.js"></script>
+<script src="src/config.js"></script>
+<script>
+  // The style: ?style=name in the URL wins over PROJECT.style (render.mjs --style=name uses this to preview a style).
+  const STYLES = ['watercolor', 'pixel', 'cutout', 'crayon', 'chalk', 'neon', 'riso'];
+  const STYLE_NAME = new URLSearchParams(location.search).get('style') || PROJECT.style || 'watercolor';
+  if (!STYLES.includes(STYLE_NAME)) throw new Error(`unknown style "${STYLE_NAME}"; one of ${STYLES.join(', ')}`);
+  if (STYLE_NAME === 'watercolor') document.write('<script src="node_modules/p5.brush/dist/p5.brush.js"><\/script>');
+</script>
 </head>
 <body>
 <main>
@@ -22,8 +29,11 @@
   <div class="bar"><input id="scrub" type="range" min="0" max="11" step="0.0417" value="0"><span id="tt">loading…</span></div>
 </main>
 <!-- engine -->
-<script src="src/config.js"></script>
 <script src="src/core.js"></script>
+<script>
+  if (STYLE_NAME !== 'watercolor') document.write('<script src="src/styles/kit2d.js"><\/script>');
+  document.write(`<script src="src/styles/${STYLE_NAME}.js"><\/script>`);
+</script>
 <script src="src/clawd.js"></script>
 <script src="src/timeline.js"></script>
 <!-- reference sheets (standalone loops) -->

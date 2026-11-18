@@ -1,22 +1,22 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "opus-video-skills",
+  "name": "animation-styles-skill",
   "owner": {
-    "name": "tuzhechen2005"
+    "name": "xsong13"
   },
   "metadata": {
-    "description": "A hand-painted animation skill for Claude Opus 5.5 in Claude Code, with code-generated frames, music-video storyboarding and lyric sync."
+    "description": "A hand-drawn animation skill for Claude Code in seven styles (watercolour, pixel, cutout, crayon, chalk, neon, riso), with code-generated frames, music-video storyboarding and lyric sync."
   },
   "plugins": [
     {
       "name": "painted-animation",
-      "description": "Hand-painted watercolour-and-ink cartoons and lyric videos: p5.js + p5.brush, rendered frame by frame in headless Chrome, with storyboarding, character acting, beat sync and karaoke.",
+      "description": "Hand-drawn-looking cartoons and lyric videos in seven styles (watercolour, pixel, paper cutout, crayon, chalk, neon, risograph): p5.js, rendered frame by frame in headless Chrome, with storyboarding, character acting, beat sync and karaoke.",
       "source": "./",
       "strict": false,
       "skills": ["./skills/painted-animation"],
       "category": "design",
-      "keywords": ["animation", "watercolour", "lyric-video", "music-video", "p5js"],
-      "homepage": "https://github.com/tuzhechen2005/opus-video-skills/tree/main/skills/painted-animation"
+      "keywords": ["animation", "watercolour", "pixel-art", "papercut", "crayon", "chalkboard", "neon", "risograph", "lyric-video", "music-video", "p5js"],
+      "homepage": "https://github.com/xsong13/animation-styles-skill/tree/main/skills/painted-animation"
     }
   ]
 }

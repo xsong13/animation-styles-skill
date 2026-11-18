@@ -6,7 +6,7 @@
 <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/简体中文-D97757?style=for-the-badge" alt="简体中文"></a>
 
 基于 Claude Opus 5.5 的手绘风格动画与歌词 MV 制作技能（Claude Code Skill）。
-属于 [opus-video-skills](../../README.zh-CN.md) 合集。
+属于 [animation-styles-skill](../../README.zh-CN.md) 合集。
 
 </div>
 
@@ -21,9 +21,26 @@
 ## 技术原理
 
 1. **素材收集与分镜。** 制作音乐 MV 时，Claude 会先索取歌曲音频和 LRC 歌词文件，再用一个可留空的自然问题，一次性询问用户希望呈现的故事与整体感觉、想贯穿的画面元素以及需要避开的内容。禁止拆成五个问题或五项表单；用户只需回答一句话，也可以留空。随后编写镜头表，确定场景、配色、角色情绪线与转场方式。每个镜头都列出观众需要依次理解的信息，并为每条信息分配时间。
-2. **绘制。** 每个镜头是一个 JavaScript 函数，使用 p5.js 与水彩笔刷库 [p5.brush](https://github.com/acamposuribe/p5.brush) 绘制完整画面。每一帧都由时间唯一确定。
-3. **审查。** 少量关键帧拼图、短逐帧序列与局部特写可以在云端渲染，由 Claude 检查画面并修改代码，直至每个镜头符合规范。
-4. **输出。** Claude 禁止未经询问直接开始完整渲染，必须让用户明确选择本地或云端。选择本地后禁止云端全量渲染，并改为提供准确的本地执行命令。各帧并行渲染后，由 ffmpeg 编码为 MP4；如提供音频，一并合入。
+2. **选择风格。** Claude 用一个问题请用户从七种风格中选一种（用户已经说明的话直接采用）：水彩、像素、剪纸、蜡笔、粉笔、霓虹、孔版印刷（Riso）。
+3. **绘制。** 每个镜头是一个 JavaScript 函数，通过 `paint()` / `inkLine()` / `glow()` 用 p5.js 绘制完整画面，具体笔触由所选风格决定（水彩风格使用笔刷库 [p5.brush](https://github.com/acamposuribe/p5.brush)，其余六种在普通 2D 画布上绘制）。每一帧都由时间唯一确定。
+4. **审查。** 少量关键帧拼图、短逐帧序列与局部特写可以在云端渲染，由 Claude 检查画面并修改代码，直至每个镜头符合规范。
+5. **输出。** Claude 禁止未经询问直接开始完整渲染，必须让用户明确选择本地或云端。选择本地后禁止云端全量渲染，并改为提供准确的本地执行命令。各帧并行渲染后，由 ffmpeg 编码为 MP4；如提供音频，一并合入。
+
+## 风格
+
+![同一场景的七种风格](template/docs/styles.jpg)
+
+| 风格 | 效果 | 速度 |
+|---|---|---|
+| `watercolor` 水彩 | 水彩晕染与抖动墨线（默认） | 约 0.5–2.5 秒/帧，需 GPU |
+| `pixel` 像素 | 复古游戏画面：低分辨率网格、有限色板、有序抖动 | 很快 |
+| `cutout` 剪纸 | 剪纸／皮影：彩色卡纸、剪切边缘、投影 | 快 |
+| `crayon` 蜡笔 | 儿童蜡笔画：蜡质笔触、纸张纹理 | 快 |
+| `chalk` 粉笔 | 绿色黑板上的粉笔画 | 快 |
+| `neon` 霓虹 | 暗色世界中的发光灯管、扫描线 | 中等 |
+| `riso` 孔版印刷 | 四色专色油墨半调网点，套色错位 | 快 |
+
+场景代码只写一次；风格由 `src/config.js` 中的一行决定（`style: 'cutout'`），也可以用 `node render.mjs --style=cutout …` 在不改配置的情况下预览其他风格。每种风格是 `template/src/styles/` 下的一个文件；各风格的适用场景及如何新增风格，见 `ANIMATION_GUIDE.md` 的 "Styles" 一节。
 
 ## 主要特性
 
@@ -57,8 +74,8 @@
 参见[合集说明](../../README.zh-CN.md#安装)。以插件方式安装：
 
 ```
-/plugin marketplace add tuzhechen2005/opus-video-skills
-/plugin install painted-animation@opus-video-skills
+/plugin marketplace add xsong13/animation-styles-skill
+/plugin install painted-animation@animation-styles-skill
 ```
 
 ## 使用方法

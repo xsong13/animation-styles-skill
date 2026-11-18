@@ -8,6 +8,12 @@ const PAL = {
   night: '#1F2550', indigo: '#2F3C7A', rose: '#E27A92', ochre: '#E8AA38', sap: '#6E9F58',
   teal: '#3A9C98', violet: '#7B5CA8', cream: '#FFF5E2', sky: '#8EC3E6'
 };
+// The visual style (PROJECT.style, or ?style=name in the URL). studio.html loads src/styles/<name>.js after this file;
+// a style may set p2d (plain 2D canvas instead of WebGL + p5.brush), paper() (the ground drawn under every frame),
+// post(ctx, t) (full-frame finish instead of the paper grain), and replace paintAt / inkLine / glow. Scenes don't change.
+const STYLE = { name: typeof STYLE_NAME === 'string' ? STYLE_NAME : 'watercolor', p2d: false, paper: null, post: null };
+// p5's WEBGL origin is the canvas centre; P2D's is the corner. Call after resetMatrix() to get the frame's own pixels.
+const toFrame = () => { if (!STYLE.p2d) translate(-W / 2, -H / 2); };
 
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const lerp = (a, b, x) => a + (b - a) * x;
@@ -240,7 +246,7 @@ function flushLetters() {
   letG.clear(); drawLetters(letG.drawingContext); LETTERS = [];
   flushBrush();
   // Letters are already in screen space, so composite them with the base transform even inside camBegin().
-  push(); resetMatrix(); translate(-W / 2, -H / 2); image(letG, 0, 0); pop();
+  push(); resetMatrix(); toFrame(); image(letG, 0, 0); pop();
 }
 
 // ---------- paper ----------
@@ -273,9 +279,9 @@ function defineBrushes() {
 
 // ---------- frame ----------
 async function setup() {
-  createCanvas(W, H, WEBGL); pixelDensity(1); noLoop();
-  brush.scaleBrushes(5); defineBrushes();
-  paperG = makePaper(); grainC = makeGrain(); glowTex = makeGlowTex(); letG = createGraphics(W, H); letG.pixelDensity(1);
+  createCanvas(W, H, STYLE.p2d ? P2D : WEBGL); pixelDensity(1); noLoop();
+  if (!STYLE.p2d) { brush.scaleBrushes(5); defineBrushes(); }
+  paperG = (STYLE.paper || makePaper)(); grainC = makeGrain(); glowTex = makeGlowTex(); letG = createGraphics(W, H); letG.pixelDensity(1);
   outC = document.getElementById('out'); outX = outC.getContext('2d');
   await Promise.all([document.fonts.load('100px "Permanent Marker"'), document.fonts.load('800 50px "Shantell Sans"'), ...(window.EXTRA_FONTS || []).map(([f, txt]) => document.fonts.load(f, txt))]);
   window.ready = true;
@@ -284,7 +290,7 @@ async function setup() {
 function draw() {
   if (!window.ready) return;
   LETTERS = []; CAM = LAST_CAM = null;
-  push(); translate(-W / 2, -H / 2);
+  push(); toFrame();
   BOILN = Math.floor(T * BOIL); CLAWD_N = 0; boilSeed('frame'); noiseSeed(77);
   image(paperG, 0, 0);
   drawWorld(T);
@@ -295,8 +301,9 @@ function composite(t) {
   c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
   c.drawImage(drawingContext.canvas, 0, 0, W, H);
   drawLetters(c);
-  c.globalCompositeOperation = 'multiply'; c.drawImage(grainC, 0, 0);
-  c.globalCompositeOperation = 'source-over';
+  if (STYLE.post) { c.save(); STYLE.post(c, t); c.restore(); }
+  else { c.globalCompositeOperation = 'multiply'; c.drawImage(grainC, 0, 0); }
+  c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
   if (window.overlayHook) window.overlayHook(c, t);   // optional crisp 2D overlay on top of the grain (e.g. karaoke, see src/karaoke.js)
 }
 window.renderAt = async (t, type = 'image/png', q = .92) => { T = t; await redraw(); composite(t); return outC.toDataURL(type, q); };
@@ -316,7 +323,7 @@ window.renderSheet = async (times, cols = 3, w = 640, crop = null, at = null) =>
   }
   return { url: sc.toDataURL('image/jpeg', .9), ms };
 };
-window.gpuInfo = () => { const gl = drawingContext, e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); };
+window.gpuInfo = () => { const gl = drawingContext; if (!gl.getExtension) return 'canvas 2d (' + STYLE.name + ')'; const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); };
 
 function devUI() {
   const s = document.getElementById('scrub'), lab = document.getElementById('tt'); s.max = window.LOOP ? window.LOOP.len : DUR;
